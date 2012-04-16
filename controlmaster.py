@@ -75,7 +75,10 @@ class controlmaster():
     self.masterpid = self.cmdpid
     print "masterpid = %s" % self.masterpid
     if self.masterpid > 0:
-      os.kill(self.masterpid,signal.SIGTERM)
+      try:
+        os.kill(self.masterpid,signal.SIGTERM)
+      except OSError, e:
+        pass
     return False
 
 
