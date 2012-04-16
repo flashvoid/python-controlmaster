@@ -1,11 +1,13 @@
 #!/usr/bin/env python
-from cStringIO import StringIO
 import sys
 import os
 import commands
 import string
 import random
 import subprocess
+import thread
+import time
+import signal
 
 class controlmaster():
   host = ''
@@ -13,12 +15,14 @@ class controlmaster():
   master_socket = ''
   controldir = ''
   debug = False
+  masterpid = 0
+  cmdpid = 0
   def __init__(self,hostname,master_socket='',debug=False):
     self.ifdebug("in init")
     self.host = hostname
     self.check_control_dir()
-    self.stdout = StringIO()
-    self.stderr = StringIO()
+    self.stdout = ''
+    self.stderr = ''
     if master_socket=='':
       rnd=''.join(random.choice(string.letters) for i in xrange(10))
       self.master_socket = self.controldir + '/' + rnd
@@ -31,19 +35,16 @@ class controlmaster():
       print args
 
   def cmd(self,args):
-    old_stdout = sys.stdout
-    old_stderr = sys.stderr
-    sys.stdout = self.stdout
-    sys.stderr = self.stderr
     self.ifdebug("in cmd: executing %s" % args)
     try:
-      retcode = subprocess.call(args)
+      p = subprocess.Popen(args,stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+      self.cmdpid=p.pid
+      retcode = p.wait()
+      self.stdout = p.communicate()[0]
       if retcode < 0:
         print >>sys.stderr,"in cmd: Child was terminated", -retcode
     except OSError, e:
       print >>sys.stderr,"in cmd: Execution failed:", e
-    sys.stdout = old_stdout
-    sys.stderr = old_stderr
     return retcode
 
   def checkauth(self):
@@ -60,14 +61,24 @@ class controlmaster():
   def connect(self):
     self.ifdebug("in connect")
     if self.checkauth(): return True
-    status = self.cmd(['ssh', '-fNMS', self.master_socket, self.host])
-    if status == 0: 
-      return True
-    else:
-      print "in connect: Fail : %s" % status
-      self.disconnect()
-      return False
-      
+    thread.start_new_thread(self.cmd, ((['ssh', '-fNMS', self.master_socket, self.host]),))
+    print "connecting", self.host,
+    for i in range(0,10):
+      if self.checkauth(): 
+        self.masterpid = self.cmdpid
+        print "Success"
+        return True
+      print '.',
+      sys.stdout.flush()
+      time.sleep(1)
+    print "Fail"
+    self.masterpid = self.cmdpid
+    print "masterpid = %s" % self.masterpid
+    if self.masterpid > 0:
+      os.kill(self.masterpid,signal.SIGTERM)
+    return False
+
+
   def disconnect(self):
     self.ifdebug("in disconnect")
     if not self.checkauth(): return True
@@ -123,7 +134,7 @@ class controlmaster():
     if not self.checkauth(): return False
     status = self.cmd(['ssh','-S',self.master_socket,'go',command])
     if status == 0: 
-      print self.stdout.getvalue()
+      print self.stdout
       return status
     else:
       print "in exe: Fail : %s" % status
