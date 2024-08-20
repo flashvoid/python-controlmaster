@@ -31,7 +31,7 @@ class controlmaster():
 
   def ifdebug(self,args):
     if self.debug:
-      print args
+      print(args)
 
   def cmd(self,args):
     self.ifdebug("in cmd: executing %s" % args)
@@ -41,9 +41,9 @@ class controlmaster():
       retcode = p.wait()
       self.stdout = p.communicate()[0]
       if retcode < 0:
-        print >>sys.stderr,"in cmd: Child was terminated", -retcode
-    except OSError, e:
-      print >>sys.stderr,"in cmd: Execution failed:", e
+        print("in cmd: Child was terminated ", -retcode, file=sys.stderr)
+    except OSError as e:
+      print("in cmd: Execution failed: ", e, file=sys.stderr)
     return retcode
 
   def checkauth(self):
@@ -61,22 +61,22 @@ class controlmaster():
     self.ifdebug("in connect")
     if self.checkauth(): return True
     thread.start_new_thread(self.cmd, ((['ssh', '-fNMS', self.master_socket, self.host]),))
-    print "connecting", self.host,
+    print("connecting", self.host)
     for i in range(0,10):
       if self.checkauth(): 
         self.masterpid = self.cmdpid
-        print "Success"
+        print("Success")
         return True
-      print '.',
+      print(".")
       sys.stdout.flush()
       time.sleep(1)
-    print "Fail"
+    print("Fail")
     self.masterpid = self.cmdpid
-    print "masterpid = %s" % self.masterpid
+    print("masterpid = %s" % self.masterpid)
     if self.masterpid > 0:
       try:
         os.kill(self.masterpid,signal.SIGTERM)
-      except OSError, e:
+      except OSError:
         pass
     return False
 
@@ -88,7 +88,7 @@ class controlmaster():
     if status == 0: 
       return True
     else:
-      print "in disconnect: Fail : %s" % status
+      print("in disconnect: Fail : %s" % status)
       return False
 
   def put(self,src,dst):
@@ -98,7 +98,7 @@ class controlmaster():
     if status == 0: 
       return True
     else:
-      print "in put: Fail : %s" % status
+      print("in put: Fail : %s" % status)
       return False
 
   def get(self,src,dst):
@@ -108,7 +108,7 @@ class controlmaster():
     if status == 0: 
       return True
     else:
-      print "in get: Fail : %s" % status
+      print("in get: Fail : %s" % status)
       return False
 
   def rput(self):
@@ -118,7 +118,7 @@ class controlmaster():
     if status == 0: 
       return True
     else:
-      print "in rput: Fail : %s" % status
+      print("in rput: Fail : %s" % status)
       return False
 
   def rget(self):
@@ -128,7 +128,7 @@ class controlmaster():
     if status == 0: 
       return True
     else:
-      print "in rget: Fail : %s" % status
+      print("in rget: Fail : %s" % status)
       return False
  
   def exe(self,command):
@@ -136,10 +136,10 @@ class controlmaster():
     if not self.checkauth(): return False
     status = self.cmd(['ssh','-S',self.master_socket,'go',command])
     if status == 0: 
-      print self.stdout
+      print(self.stdout)
       return status
     else:
-      print "in exe: Fail : %s" % status
+      print("in exe: Fail : %s" % status)
       return False
 
   def check_control_dir(self,
