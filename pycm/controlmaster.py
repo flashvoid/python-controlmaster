@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import sys
 import os
-import commands
 import string
 import random
 import subprocess
