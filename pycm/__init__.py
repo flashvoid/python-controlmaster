@@ -1,6 +1,6 @@
 import sys
 
-from pycm.controlmaster import ControlMaster
+from pycm.control_master import ControlMaster
 
 __all__ = [
     "ControlMaster",
