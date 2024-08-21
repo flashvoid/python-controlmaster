@@ -4,7 +4,7 @@ import os
 import string
 import random
 import subprocess
-import thread
+import threading
 import time
 import signal
 
@@ -23,7 +23,7 @@ class controlmaster():
     self.stdout = ''
     self.stderr = ''
     if master_socket=='':
-      rnd=''.join(random.choice(string.letters) for i in xrange(10))
+      rnd=''.join(random.choice(string.ascii_letters) for i in range(10))
       self.master_socket = self.controldir + '/' + rnd
     else:
       self.master_socket = self.controldir + '/' + master_socket
@@ -60,7 +60,7 @@ class controlmaster():
   def connect(self):
     self.ifdebug("in connect")
     if self.checkauth(): return True
-    thread.start_new_thread(self.cmd, ((['ssh', '-fNMS', self.master_socket, self.host]),))
+    threading.Thread(target=self.cmd, args=(['ssh', '-fNMS', self.master_socket, self.host],)).start()
     print("connecting", self.host)
     for i in range(0,10):
       if self.checkauth(): 
