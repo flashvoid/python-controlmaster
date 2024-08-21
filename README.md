@@ -1,9 +1,9 @@
 # pycm
 
-Simple wrapper around ssh implement put, get, exe via controlmaster session.
+Simple wrapper around ssh implementing put, get, exe via [ControlMaster](https://en.wikibooks.org/wiki/OpenSSH/Cookbook/Multiplexing) multiplexing.
 
-Generaly used for same tasks as paramiko or fabric
-but act as real user and so better handle complex ssh_config files
+Generaly used for same tasks as [paramiko](https://github.com/paramiko/paramiko) or [fabric](https://github.com/fabric/fabric)
+but act as real user and so better handle complex [ssh_config](https://linux.die.net/man/5/ssh_config) files
 with long redirect chains especially
 
 ## Usage
@@ -13,14 +13,14 @@ with long redirect chains especially
 ```
 
 ```python
-from pycm import controlmaster
+from pycm import ControlMaster
 
-customer = controlmaster.controlmaster('customhost')
-customer.connect()
-customer.put(src,dst)
-customer.exe(cmd)
-customer.get(src,dst)
-customer.disconnect()
+ssh = ControlMaster("customhost")
+ssh.connect()
+ssh.put(src,dst)
+ssh.exe(cmd)
+ssh.get(src,dst)
+ssh.disconnect()
 ```
 
 ## TODO
